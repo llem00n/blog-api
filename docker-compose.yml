@@ -1,0 +1,45 @@
+name: blog
+services:
+  api:
+    container_name: blog-api
+    build:
+      dockerfile: Dockerfile
+      context: .
+    volumes:
+      - .:/usr/src/app
+    ports:
+      - 3000:3000
+    depends_on:
+      - postgres
+    environment:
+      SECRET: ${JWT_SECRET}
+      BCRYPT_SALT_ROUNDS: 10
+      DB_HOST: postgres
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASSWORD}
+      DB_PORT: 5432
+    networks:
+      - postgres
+
+  postgres:
+    container_name: blog-db
+    image: postgres:15.0
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - blogdb:/var/lib/postgresql/data
+    networks:
+      - postgres
+
+volumes:
+  blogdb:
+
+networks:
+  postgres:
+    driver: bridge
