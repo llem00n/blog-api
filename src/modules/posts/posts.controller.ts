@@ -3,7 +3,7 @@ import { Body, Get, Param, Patch, Post, UseGuards, Request, Delete } from '@nest
 import { AuthGuard } from '@nestjs/passport';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { PostsService } from './services/posts.service';
+import { PostsService } from 'src/database/services/posts.service';
 
 @Controller('posts')
 export class PostsController {
@@ -30,7 +30,9 @@ export class PostsController {
 		if (post.user != req.user.id)
 			throw new ForbiddenException("You're not the owner of the post")
 
-		return await this.postsService.updatePost(postData)
+		post.body = postData.body,
+		post.title = postData.title
+		return await this.postsService.updatePost(post)
 	}
 
 	@UseGuards(AuthGuard('jwt'))

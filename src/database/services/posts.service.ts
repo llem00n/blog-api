@@ -1,8 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Post } from 'src/models/post.model';
 import { User } from 'src/models/user.model';
 import { DataSource, FindOneOptions, Repository } from 'typeorm';
-import { UpdatePostDto } from '../dto/update-post.dto';
 
 @Injectable()
 export class PostsService {
@@ -28,7 +27,7 @@ export class PostsService {
 		return await this.repository.delete(postId);
 	}
 
-	async updatePost(postData: UpdatePostDto) {
+	async updatePost(postData: Post) {
 		return await this.repository.update(postData.id, postData)
 	}
 

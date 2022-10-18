@@ -1,6 +1,7 @@
 import { Controller, Post, UseGuards, Request, Body, Put, Get } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from 'src/auth/auth.service';
+import { User } from 'src/models/user.model';
 import { RegisterUserDto } from './dto/register.dto';
 
 @Controller('users')
@@ -16,7 +17,12 @@ export class UsersController {
 
 	@Post('register')
 	async register(@Body() registerDto: RegisterUserDto) {
-		return this.authService.register(registerDto)
+		const user = new User();
+		user.password = registerDto.password
+		user.username = registerDto.username
+		user.posts = []
+		
+		return this.authService.register(user)
 	}
 
 	@UseGuards(AuthGuard('jwt'))

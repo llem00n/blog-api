@@ -1,22 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { User } from 'src/models/user.model';
-import { RegisterUserDto } from '../dto/register.dto';
 import { DataSource, Repository } from 'typeorm';
-import { PasswordService } from 'src/auth/password.service';
+import * as bcrypt from 'bcryptjs'
 
 @Injectable()
 export class UsersService {
 	private repository: Repository<User>;
+	private salt: string;
 
-	constructor(dataSource: DataSource, private passwordService: PasswordService) {
+	constructor(dataSource: DataSource) {
 		this.repository = dataSource.getRepository(User)
+		this.salt = bcrypt.genSaltSync(Number.parseInt(process.env.BCRYPT_SALT_ROUNDS))
 	}
 
-	async addUser(userData: RegisterUserDto) {
-		const user = new User()
-		user.username = userData.username
-		user.password = this.passwordService.hash(userData.password)
-
+	async addUser(user: User) {
+		user.password = bcrypt.hashSync(user.password, this.salt)
 		return await this.repository.save(user)
 	}
 
