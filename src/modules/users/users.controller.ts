@@ -1,8 +1,9 @@
-import { Controller, Post, UseGuards, Request, Body, Put, Get } from '@nestjs/common';
+import { Controller, Post, UseGuards, Request, Body, Put, Get, BadRequestException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from 'src/auth/auth.service';
 import { User } from 'src/models/user.model';
 import { RegisterUserDto } from './dto/register.dto';
+import { validateSync } from 'class-validator'
 
 @Controller('users')
 export class UsersController {
@@ -16,12 +17,17 @@ export class UsersController {
 	}
 
 	@Post('register')
-	async register(@Body() registerDto: RegisterUserDto) {
+	async register(@Body() requestData: RegisterUserDto) {
+		const errors = validateSync(requestData)
+		if (errors.length) {
+			throw new BadRequestException(errors)
+		}
+
 		const user = new User();
-		user.password = registerDto.password
-		user.username = registerDto.username
+		user.password = requestData.password
+		user.username = requestData.username
 		user.posts = []
-		
+
 		return this.authService.register(user)
 	}
 

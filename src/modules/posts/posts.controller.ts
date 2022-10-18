@@ -1,9 +1,10 @@
-import { Controller, ForbiddenException } from '@nestjs/common';
+import { BadRequestException, Controller, ForbiddenException } from '@nestjs/common';
 import { Body, Get, Param, Patch, Post, UseGuards, Request, Delete } from '@nestjs/common/decorators';
 import { AuthGuard } from '@nestjs/passport';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PostsService } from 'src/database/services/posts.service';
+import { validateSync } from 'class-validator';
 
 @Controller('posts')
 export class PostsController {
@@ -16,22 +17,32 @@ export class PostsController {
 
 	@UseGuards(AuthGuard('jwt'))
 	@Post('create')
-	async createPost(@Request() req, @Body() postData: CreatePostDto) {
+	async createPost(@Request() req, @Body() requestData: CreatePostDto) {
+		const errors = validateSync(requestData)
+		if (errors.length) {
+			throw new BadRequestException(errors);
+		}
+
 		return this.postsService.addPost({
-			...postData,
+			...requestData,
 			username: req.user.username
 		})
 	}
 
 	@UseGuards(AuthGuard('jwt'))
 	@Patch('update')
-	async updatePost(@Request() req, @Body() postData: UpdatePostDto) {
-		const post = await this.postsService.getPost({ where: { id: postData.id }, loadRelationIds: true })
+	async updatePost(@Request() req, @Body() requestData: UpdatePostDto) {
+		const errors = validateSync(requestData)
+		if (errors.length) {
+			throw new BadRequestException(errors);
+		}
+		
+		const post = await this.postsService.getPost({ where: { id: requestData.id }, loadRelationIds: true })
 		if (post.user != req.user.id)
 			throw new ForbiddenException("You're not the owner of the post")
 
-		post.body = postData.body,
-		post.title = postData.title
+		post.body = requestData.body,
+		post.title = requestData.title
 		return await this.postsService.updatePost(post)
 	}
 
